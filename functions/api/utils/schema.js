@@ -240,7 +240,7 @@ export const SEED_DATA_SQL = [
     ('contact_address', '广西贺州市富川瑶族自治县朝东镇福溪村'),
     ('icp_number', ''),
     ('copyright_text', '© 2026 福溪村 All Rights Reserved.'),
-    ('footer_text', 'Powered by Cloudflare Pages'),
+    ('footer_text', 'Powered by Cloudflare Workers'),
     ('theme_primary_color', '#2d6a4f'),
     ('theme_primary_light', '#40916c'),
     ('theme_primary_bg', '#f0f7f4'),

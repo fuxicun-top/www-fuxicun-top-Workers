@@ -1,6 +1,6 @@
 # 福溪村官方网站
 
-广西贺州市富川瑶族自治县朝东镇福溪村官方网站，基于 Cloudflare Pages 全栈构建，零服务器成本。
+广西贺州市富川瑶族自治县朝东镇福溪村官方网站，基于 Cloudflare Workers 全栈构建，零服务器成本。
 
 ## 项目简介
 
@@ -10,11 +10,11 @@
 
 | 层级 | 技术 | 说明 |
 |------|------|------|
-| 托管 | Cloudflare Pages | 静态资源托管 + Serverless Functions |
-| 后端 | Cloudflare Pages Functions | API 路由，基于 Hono 框架风格 |
+| 托管 | Cloudflare Workers | 边缘计算平台 + 静态资源托管 |
+| 后端 | Cloudflare Workers | API 路由，统一入口处理 |
 | 数据库 | Cloudflare D1 | SQLite 兼容的边缘数据库 |
-| 缓存 | Cloudflare KV | 键值存储，用于 API 缓存（10分钟 TTL） |
-| 存储 | Cloudflare R2 | 对象存储，用于图片等媒体文件 |
+| 缓存 | Cloudflare KV | 键值存储，用于 API 缓存和限流 |
+| 存储 | Cloudflare R2 | 对象存储，用于图片和视频文件 |
 | 前端 | 原生 HTML/CSS/JS | 无框架依赖，轻量高效 |
 | 认证 | JWT | 无状态用户认证 |
 | 安全 | Cloudflare Turnstile | 人机验证，防机器人注册 |
@@ -22,60 +22,43 @@
 ## 项目结构
 
 ```
+├── src/                       # Workers 入口
+│   └── index.js               # 主入口文件（路由分发）
+├── functions/                 # API 路由和工具函数
+│   ├── api/
+│   │   ├── routes/            # API 路由（auth、admin、public、articles）
+│   │   ├── middleware/        # 中间件（认证）
+│   │   └── utils/             # 工具函数（schema、cache、response 等）
+│   ├── articles/[slug].js     # 文章 SEO 友好 URL
+│   ├── cdn/[[path]].js        # R2 CDN 代理
+│   └── p/[slug].js            # 自定义页面路由
 ├── index.html                 # 首页
 ├── about.html                 # 走进福溪
 ├── culture.html               # 理学文化
 ├── scenery.html               # 古村风貌
 ├── ethnic.html                # 民族文化
 ├── travel.html                # 旅游指南
-├── articles.html              # 新闻动态
-├── article-detail.html        # 文章详情
-├── stories.html               # 村民故事
-├── news.html                  # 最新资讯
-├── gallery.html               # 图片画廊
-├── videos.html                # 视频库
-├── login.html                 # 登录
-├── register.html              # 注册
-├── forgot-password.html       # 忘记密码
-├── install.html               # 安装向导
-├── page.html                  # 自定义页面模板
-├── terms.html                 # 用户协议
-├── privacy.html               # 隐私政策
-├── robots.txt                 # 爬虫配置
+├── articles.html              # 全部文章
+├── news.html                  # 新闻动态
 ├── admin/                     # 后台管理
 │   ├── index.html             # 仪表盘
 │   ├── articles.html          # 文章管理
-│   ├── article-edit.html      # 文章编辑（Markdown）
-│   ├── categories.html        # 分类管理
-│   ├── comments.html          # 评论管理
-│   ├── media.html             # 媒体库
-│   ├── banners.html           # 轮播图管理
-│   ├── nav.html               # 导航管理
-│   ├── pages.html             # 页面管理
+│   ├── page-articles.html     # 页面文章管理
+│   ├── pages.html             # 页面管理（含板块编辑）
+│   ├── homepage.html          # 首页配置
+│   ├── database.html          # 数据库管理
 │   ├── settings.html          # 网站设置
-│   ├── users.html             # 用户管理
-│   └── logs.html              # 操作日志
+│   └── ...                    # 其他管理页面
 ├── css/                       # 样式文件
-│   ├── common/                # 基础样式（reset、变量、工具类）
-│   ├── components/            # 组件样式（header、footer、卡片等）
-│   ├── pages/                 # 页面专属样式
-│   └── admin/                 # 后台样式
 ├── js/                        # JavaScript
-│   ├── common/                # 工具库（API、Storage、Toast 等）
-│   ├── components/            # 公共组件（header、footer）
-│   ├── pages/                 # 页面脚本
-│   └── admin/                 # 后台脚本
 ├── images/                    # 图片资源
-├── functions/                 # Cloudflare Functions（后端 API）
-│   ├── api/
-│   │   ├── routes/            # API 路由（auth、admin、public）
-│   │   └── utils/             # 工具函数（schema、hash、response 等）
-│   └── p/[slug].js            # 自定义页面路由
-├── sql/                       # 数据库脚本
-│   ├── create-tables.sql      # 建表语句
-│   └── default-data.sql       # 默认数据
-├── wrangler.toml.example      # Cloudflare 配置模板
+├── videos/                    # 视频文件（不上传仓库）
+├── src/index.js               # Workers 入口文件
+├── wrangler.toml              # Cloudflare Workers 配置
+├── .dev.vars                  # 本地开发环境变量
+├── .assetsignore              # 静态资源排除列表
 ├── package.json               # 项目配置
+├── 修改记录.md                # 版本修改记录
 └── LICENSE                    # Apache 2.0 开源协议
 ```
 
@@ -129,12 +112,6 @@ npm install
 
 ### 4. 配置环境变量
 
-复制配置模板并填入你的资源 ID：
-
-```bash
-cp wrangler.toml.example wrangler.toml
-```
-
 编辑 `wrangler.toml`，填入 D1、KV、R2 的绑定信息。
 
 创建 `.dev.vars` 文件用于本地开发的环境变量：
@@ -153,7 +130,7 @@ npm run dev
 
 访问 `http://localhost:8788/install.html` 完成安装。
 
-### 6. 部署
+### 6. 部署到 Cloudflare Workers
 
 ```bash
 npm run deploy

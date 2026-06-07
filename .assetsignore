@@ -1,0 +1,8 @@
+# 排除大文件（超过25MB的视频不作为静态资源）
+videos/
+node_modules/
+.wrangler/
+.dev.vars
+.git/
+*.mp4
+dist/
