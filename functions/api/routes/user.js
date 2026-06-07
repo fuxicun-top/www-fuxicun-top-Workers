@@ -240,8 +240,8 @@ async function uploadAvatar(request, env, user) {
       }
     });
 
-    // 头像访问 URL
-    const avatarUrl = '/cdn/' + key;
+    // 头像访问 URL（使用 R2 自定义域名）
+    const avatarUrl = 'https://assets.fuxicun.top/' + key;
 
     // 更新用户头像
     await dbRun(

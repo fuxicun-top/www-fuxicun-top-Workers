@@ -54,7 +54,7 @@
     }
 
     container.innerHTML = items.map(function(item) {
-      var url = item.url || '/cdn/' + item.filename;
+      var url = item.url || 'https://assets.fuxicun.top/' + item.filename;
       var name = item.original_name || item.filename || '';
       var date = Utils.formatDate(item.created_at);
 

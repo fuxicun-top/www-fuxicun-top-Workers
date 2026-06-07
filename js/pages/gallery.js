@@ -60,7 +60,7 @@
     }
 
     container.innerHTML = items.map(function(item, index) {
-      var url = item.url || '/cdn/' + item.filename;
+      var url = item.url || 'https://assets.fuxicun.top/' + item.filename;
       var name = item.original_name || item.filename || '';
 
       return '<div class="gallery-masonry__item" onclick="GalleryPage.openLightbox(' + index + ')">' +
@@ -108,7 +108,7 @@
   function updateLightbox() {
     var item = images[currentIndex];
     if (!item) return;
-    var url = item.url || '/cdn/' + item.filename;
+    var url = item.url || 'https://assets.fuxicun.top/' + item.filename;
     document.getElementById('lightbox-image').src = url;
     document.getElementById('lightbox-image').alt = item.original_name || '';
     document.getElementById('lightbox-info').textContent = (currentIndex + 1) + ' / ' + images.length;

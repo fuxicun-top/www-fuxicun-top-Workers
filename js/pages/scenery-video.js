@@ -7,12 +7,11 @@
 var SceneryVideo = (function() {
   'use strict';
 
-  // 视频源（按优先级排列，在线链接留空后续填入）
+  // 视频源（按优先级排列：R2自定义域名 → 本地静态文件）
   var videoSources = [
-    // 'https://your-cdn-url/fuxigz.mp4',  // 在线链接（待填入）
-    '/cdn/videos/fuxigz.mp4',
+    'https://assets.fuxicun.top/videos/fuxigz.mp4',
     '/videos/fuxigz.mp4'
-  ].filter(function(s) { return s; }); // 过滤空值
+  ].filter(function(s) { return s; });
 
   var LOAD_TIMEOUT = 8000;
   var isPlaying = false;

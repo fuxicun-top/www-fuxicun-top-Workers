@@ -104,8 +104,8 @@ async function uploadFile(request, env, type) {
       }
     });
 
-    // 文件访问 URL（通过 R2 公开访问或绑定域名）
-    const fileUrl = '/cdn/' + key;
+    // 文件访问 URL（使用 R2 自定义域名）
+    const fileUrl = 'https://assets.fuxicun.top/' + key;
 
     // 记录到 media 表
     await dbRun(
