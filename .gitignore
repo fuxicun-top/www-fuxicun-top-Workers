@@ -9,12 +9,14 @@ dist/
 .env.local
 .env.*.local
 
-# Wrangler 配置（包含真实绑定 ID，不要上传）
+# Wrangler 配置
 wrangler.toml
-wrangler.jsonc
 .wrangler/
 .dev.vars
 package-lock.json
+
+# 敏感配置文件
+服务器数据库相关配置.md
 
 # 超过25MB的视频文件（Cloudflare Pages限制25MB/文件）
 videos/fuxicun.mp4
