@@ -30,9 +30,20 @@ jobs:
       - name: Build Worker
         run: npm run build
 
-      - name: Deploy
+      # dev 分支部署到预览环境
+      - name: Deploy to Preview (dev branch)
+        if: github.ref == 'refs/heads/dev'
         uses: cloudflare/wrangler-action@v3
         with:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-          command: deploy --config wrangler.jsonc --env ${{ github.ref == 'refs/heads/main' && 'production' || 'preview' }}
+          command: deploy --config wrangler.jsonc --env preview
+
+      # main 分支部署到生产环境
+      - name: Deploy to Production (main branch)
+        if: github.ref == 'refs/heads/main'
+        uses: cloudflare/wrangler-action@v3
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          command: deploy --config wrangler.jsonc
