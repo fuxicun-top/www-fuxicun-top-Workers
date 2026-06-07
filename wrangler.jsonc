@@ -36,7 +36,10 @@
   ],
 
   "vars": {
-    "EMAIL_FROM": "www@fuxicun.top"
+    "EMAIL_FROM": "www@fuxicun.top",
+    "JWT_SECRET": "xiaozhou147258369",
+    "TURNSTILE_SECRET": "0x4AAAAAADSdNhFFMdMLuAwD_oPPUfogjgE",
+    "RESEND_API_KEY": "re_MaQn4Kwx_NzRa8AiNaYazimpc4zyYE3rb"
   },
 
   "env": {
