@@ -6,8 +6,9 @@
 var AboutVideo = (function() {
   'use strict';
 
-  // 视频源（按优先级排列：R2自定义域名 → 本地静态文件）
+  // 视频源（按优先级排列：在线CDN → R2优选域名 → 本地静态文件）
   var videoSources = [
+    // 'https://your-cdn-url/fuxicun.mp4',  // 在线链接（待CDN托管后填入）
     'https://assets.fuxicun.top/videos/fuxicun.mp4',
     '/videos/fuxicun.mp4'
   ].filter(function(s) { return s; });
