@@ -1,9 +1,9 @@
 {
   // Cloudflare Workers 部署配置
-  // main 分支 → 生产环境 (fuxicun-website)
-  // dev 分支 → 预览环境 (fuxicun-website-preview)
+  // main 分支 → 生产环境 (www-fuxicun-top-workers)
+  // dev 分支 → 预览环境 (www-fuxicun-top-workers-preview)
 
-  "name": "fuxicun-website",
+  "name": "www-fuxicun-top-workers",
   "main": "./dist/worker/index.js",
   "compatibility_date": "2024-01-01",
 
@@ -41,7 +41,7 @@
 
   "env": {
     "preview": {
-      "name": "fuxicun-website-preview"
+      "name": "www-fuxicun-top-workers-preview"
     }
   }
 }
