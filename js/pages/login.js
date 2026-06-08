@@ -35,23 +35,36 @@
       /^10\.\d+\.\d+\.\d+$/.test(hostname) ||
       /^172\.(1[6-9]|2\d|3[01])\.\d+\.\d+$/.test(hostname);
 
-    if (window.turnstile) {
-      try {
-        turnstile.render(container, {
-          sitekey: CONFIG.TURNSTILE_SITE_KEY,
-          callback: function(token) {
-            window._turnstileToken = token;
-          }
-        });
-      } catch (e) {
-        console.warn('Turnstile加载失败，本地开发环境可跳过验证');
-        if (isLocal) {
-          container.style.display = 'none';
+    function renderWidget() {
+      if (window.turnstile) {
+        try {
+          turnstile.render(container, {
+            sitekey: CONFIG.TURNSTILE_SITE_KEY,
+            callback: function(token) {
+              window._turnstileToken = token;
+            }
+          });
+        } catch (e) {
+          console.warn('Turnstile加载失败:', e);
+          if (isLocal) container.style.display = 'none';
         }
+      } else if (isLocal) {
+        container.style.display = 'none';
       }
-    } else if (isLocal) {
-      // 本地开发时如果turnstile未加载，隐藏容器
-      container.style.display = 'none';
+    }
+
+    // 等待 Turnstile 脚本加载完成（async defer 可能还没加载）
+    if (window.turnstile) {
+      renderWidget();
+    } else {
+      var timer = setInterval(function() {
+        if (window.turnstile) {
+          clearInterval(timer);
+          renderWidget();
+        }
+      }, 200);
+      // 10秒后停止等待
+      setTimeout(function() { clearInterval(timer); }, 10000);
     }
   }
 
