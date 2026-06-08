@@ -10,6 +10,11 @@
   var configData = {};
 
   async function init() {
+    // 先隐藏所有面板，避免闪烁
+    document.querySelectorAll('.install-panel').forEach(function(p) {
+      p.classList.remove('active');
+    });
+
     // 检查是否已通过验证（防止重复初始化导致循环）
     if (sessionStorage.getItem('install_verified') === 'true') {
       showManagementPanel();
@@ -27,6 +32,8 @@
       // API 可能还未部署，继续安装流程
     }
 
+    // 未安装，显示安装向导第一步
+    document.getElementById('step-1').classList.add('active');
     setupEvents();
   }
 
