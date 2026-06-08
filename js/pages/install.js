@@ -10,6 +10,12 @@
   var configData = {};
 
   async function init() {
+    // 检查是否已通过验证（防止重复初始化导致循环）
+    if (sessionStorage.getItem('install_verified') === 'true') {
+      showManagementPanel();
+      return;
+    }
+
     // 检查是否已安装
     try {
       var result = await API.get('/install/check');
@@ -186,6 +192,7 @@
     try {
       var result = await API.post('/install/verify-password', { password: password });
       if (result.success && result.data.valid) {
+        sessionStorage.setItem('install_verified', 'true');
         showManagementPanel();
       } else {
         Toast.error('密码错误');
@@ -238,6 +245,7 @@
     try {
       var result = await API.post('/install/clear-database');
       if (result.success) {
+        sessionStorage.removeItem('install_verified');
         Toast.success('数据库已清空，即将进入安装流程');
         setTimeout(function() { window.location.reload(); }, 1000);
       } else {
