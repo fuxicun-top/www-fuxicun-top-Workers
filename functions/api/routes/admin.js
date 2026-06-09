@@ -654,9 +654,11 @@ async function updateConfig(request, env, user) {
   ];
 
   const data = await request.json();
+  const changedKeys = [];
 
   for (const [key, value] of Object.entries(data)) {
     if (!ALLOWED_CONFIG_KEYS.includes(key)) continue;
+    changedKeys.push(key);
     await dbRun(
       env.FUXICUN_DB,
       "INSERT INTO site_config (key, value, updated_at) VALUES (?, ?, datetime('now')) ON CONFLICT(key) DO UPDATE SET value = excluded.value, updated_at = excluded.updated_at",
@@ -677,7 +679,21 @@ async function updateConfig(request, env, user) {
     await clearAllCommentPolicyCache(env);
   }
 
-  await writeAuditLog(env, user.id, 'config_update', 'config', null, '更新网站设置');
+  // 记录详细日志：列出修改了哪些配置项
+  const KEY_NAMES = {
+    'site_name': '网站名称', 'site_description': '网站描述', 'site_keywords': '关键词',
+    'contact_email': '联系邮箱', 'contact_phone': '联系电话', 'contact_address': '联系地址',
+    'icp_number': 'ICP备案号', 'copyright_text': '版权信息', 'footer_text': '页脚文本',
+    'theme_primary_color': '主题色', 'theme_primary_light': '主题浅色', 'theme_primary_bg': '主题背景色',
+    'theme_secondary_color': '次要色', 'theme_memorial_dates': '纪念日', 'theme_memorial_mode': '纪念模式',
+    'home_featured': '首页推荐', 'home_news': '首页新闻',
+    'rate_limit_exempt_ips': '限流豁免IP',
+    'comment_policy': '评论策略', 'comment_review': '评论审核', 'like_policy': '点赞策略', 'sensitive_words': '敏感词',
+    'cache_enabled': '缓存开关'
+  };
+  const changedNames = changedKeys.map(k => KEY_NAMES[k] || k);
+  const logDetail = '修改配置：' + changedNames.join('、');
+  await writeAuditLog(env, user.id, 'config_update', 'config', null, logDetail);
 
   return successResponse(null, '设置保存成功');
 }

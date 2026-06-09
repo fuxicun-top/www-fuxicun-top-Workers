@@ -21,7 +21,8 @@ var Utils = (function() {
     var day = String(d.getDate()).padStart(2, '0');
     var hours = String(d.getHours()).padStart(2, '0');
     var minutes = String(d.getMinutes()).padStart(2, '0');
-    return year + '-' + month + '-' + day + ' ' + hours + ':' + minutes;
+    var seconds = String(d.getSeconds()).padStart(2, '0');
+    return year + '-' + month + '-' + day + ' ' + hours + ':' + minutes + ':' + seconds;
   }
 
   function timeAgo(dateStr) {

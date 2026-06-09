@@ -24,7 +24,25 @@
     'comment_status_change': { text: '评论审核', class: 'status' },
     'comment_delete': { text: '删除评论', class: 'delete' },
     'media_delete': { text: '删除媒体', class: 'delete' },
-    'user_delete': { text: '删除用户', class: 'delete' }
+    'media_upload': { text: '上传媒体', class: 'create' },
+    'user_delete': { text: '删除用户', class: 'delete' },
+    'user_create': { text: '创建用户', class: 'create' },
+    'user_update': { text: '更新用户', class: 'update' },
+    'config_update': { text: '更新设置', class: 'update' },
+    'banner_create': { text: '创建轮播图', class: 'create' },
+    'banner_update': { text: '更新轮播图', class: 'update' },
+    'banner_delete': { text: '删除轮播图', class: 'delete' },
+    'category_create': { text: '创建分类', class: 'create' },
+    'category_update': { text: '更新分类', class: 'update' },
+    'category_delete': { text: '删除分类', class: 'delete' },
+    'nav_create': { text: '创建导航', class: 'create' },
+    'nav_update': { text: '更新导航', class: 'update' },
+    'nav_delete': { text: '删除导航', class: 'delete' },
+    'page_create': { text: '创建页面', class: 'create' },
+    'page_update': { text: '更新页面', class: 'update' },
+    'page_delete': { text: '删除页面', class: 'delete' },
+    'database_reset': { text: '重置数据库', class: 'delete' },
+    'database_clear': { text: '清空数据库', class: 'delete' }
   };
 
   /**
@@ -34,7 +52,13 @@
     'article': '文章',
     'comment': '评论',
     'media': '媒体',
-    'user': '用户'
+    'user': '用户',
+    'config': '设置',
+    'banner': '轮播图',
+    'category': '分类',
+    'nav': '导航',
+    'page': '页面',
+    'database': '数据库'
   };
 
   /**
@@ -103,7 +127,7 @@
 
       // 详情截取
       var detail = Utils.escapeHtml(log.detail || '-');
-      if (detail.length > 50) detail = detail.substring(0, 50) + '...';
+      var detailShort = detail.length > 80 ? detail.substring(0, 80) + '...' : detail;
 
       return '<tr>' +
         '<td>' + log.id + '</td>' +
@@ -111,8 +135,8 @@
         '<td>' + Utils.escapeHtml(log.username || '系统') + '</td>' +
         '<td>' + targetType + '</td>' +
         '<td>' + (log.target_id || '-') + '</td>' +
-        '<td class="log-detail-cell" title="' + Utils.escapeHtml(log.detail) + '">' + detail + '</td>' +
-        '<td>' + Utils.formatDate(log.created_at) + '</td>' +
+        '<td class="log-detail-cell" title="' + detail + '">' + detailShort + '</td>' +
+        '<td>' + Utils.formatDateTime(log.created_at) + '</td>' +
       '</tr>';
     }).join('');
   }
