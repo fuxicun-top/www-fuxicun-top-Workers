@@ -14,13 +14,336 @@
   <link rel="stylesheet" href="/css/components/pagination.css">
   <link rel="stylesheet" href="/css/admin/admin-layout.css">
   <style>
-    /* 操作日志页面样式 */
-    .log-action-tag { display: inline-block; padding: 2px 8px; border-radius: 4px; font-size: 12px; }
-    .log-action-tag--create { background: #e8f5e9; color: #2e7d32; }
-    .log-action-tag--update { background: #e3f2fd; color: #1565c0; }
-    .log-action-tag--delete { background: #ffebee; color: #c62828; }
-    .log-action-tag--status { background: #fff3e0; color: #e65100; }
-    .log-detail-cell { max-width: 300px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    /* ========== 操作日志页面样式 ========== */
+
+    /* 统计卡片 */
+    .log-stats {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 16px;
+      margin-bottom: 24px;
+    }
+
+    .log-stat-card {
+      background: var(--color-bg-card);
+      border-radius: var(--radius-lg);
+      padding: 20px;
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      box-shadow: var(--shadow-sm);
+      border: 1px solid var(--color-border-light);
+    }
+
+    .log-stat-icon {
+      width: 48px;
+      height: 48px;
+      border-radius: var(--radius-md);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 24px;
+      flex-shrink: 0;
+    }
+
+    .log-stat-icon--total { background: #e3f2fd; }
+    .log-stat-icon--today { background: #e8f5e9; }
+    .log-stat-icon--user { background: #fff3e0; }
+    .log-stat-icon--system { background: #f3e5f5; }
+
+    .log-stat-info {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .log-stat-label {
+      font-size: var(--font-size-sm);
+      color: var(--color-text-secondary);
+      margin-bottom: 4px;
+    }
+
+    .log-stat-value {
+      font-size: var(--font-size-2xl);
+      font-weight: 600;
+      color: var(--color-text-primary);
+    }
+
+    /* 筛选工具栏 */
+    .log-toolbar {
+      background: var(--color-bg-card);
+      border-radius: var(--radius-lg);
+      padding: 16px 20px;
+      margin-bottom: 20px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      flex-wrap: wrap;
+      box-shadow: var(--shadow-sm);
+      border: 1px solid var(--color-border-light);
+    }
+
+    .log-toolbar__label {
+      font-size: var(--font-size-sm);
+      color: var(--color-text-secondary);
+      font-weight: 500;
+    }
+
+    .log-filter-chips {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .log-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 14px;
+      border-radius: 20px;
+      font-size: var(--font-size-sm);
+      cursor: pointer;
+      transition: all var(--transition-fast);
+      border: 1px solid var(--color-border);
+      background: var(--color-bg-card);
+      color: var(--color-text-secondary);
+      user-select: none;
+    }
+
+    .log-chip:hover {
+      border-color: var(--color-primary);
+      color: var(--color-primary);
+    }
+
+    .log-chip.active {
+      background: var(--color-primary);
+      border-color: var(--color-primary);
+      color: #fff;
+    }
+
+    .log-chip__count {
+      background: rgba(0,0,0,0.1);
+      padding: 1px 6px;
+      border-radius: 10px;
+      font-size: 11px;
+    }
+
+    .log-chip.active .log-chip__count {
+      background: rgba(255,255,255,0.25);
+    }
+
+    /* 日志时间线样式 */
+    .log-timeline {
+      background: var(--color-bg-card);
+      border-radius: var(--radius-lg);
+      box-shadow: var(--shadow-sm);
+      border: 1px solid var(--color-border-light);
+      overflow: hidden;
+    }
+
+    .log-timeline-header {
+      padding: 16px 20px;
+      border-bottom: 1px solid var(--color-border-light);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .log-timeline-title {
+      font-size: var(--font-size-md);
+      font-weight: 600;
+      color: var(--color-text-primary);
+    }
+
+    .log-timeline-count {
+      font-size: var(--font-size-sm);
+      color: var(--color-text-secondary);
+    }
+
+    .log-list {
+      padding: 0;
+    }
+
+    .log-item {
+      display: flex;
+      align-items: flex-start;
+      gap: 16px;
+      padding: 16px 20px;
+      border-bottom: 1px solid var(--color-border-light);
+      transition: background var(--transition-fast);
+    }
+
+    .log-item:last-child {
+      border-bottom: none;
+    }
+
+    .log-item:hover {
+      background: var(--color-bg-hover);
+    }
+
+    /* 时间线圆点 */
+    .log-item__timeline {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding-top: 4px;
+      flex-shrink: 0;
+    }
+
+    .log-item__dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: var(--color-primary);
+      flex-shrink: 0;
+    }
+
+    .log-item__dot--create { background: #4caf50; }
+    .log-item__dot--update { background: #2196f3; }
+    .log-item__dot--delete { background: #f44336; }
+    .log-item__dot--status { background: #ff9800; }
+
+    .log-item__line {
+      width: 2px;
+      flex: 1;
+      background: var(--color-border-light);
+      margin-top: 4px;
+      min-height: 20px;
+    }
+
+    /* 日志内容区 */
+    .log-item__content {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .log-item__header {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 6px;
+      flex-wrap: wrap;
+    }
+
+    .log-item__action {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      padding: 3px 10px;
+      border-radius: 6px;
+      font-size: 12px;
+      font-weight: 500;
+      letter-spacing: 0.3px;
+    }
+
+    .log-item__action--create { background: #e8f5e9; color: #2e7d32; }
+    .log-item__action--update { background: #e3f2fd; color: #1565c0; }
+    .log-item__action--delete { background: #ffebee; color: #c62828; }
+    .log-item__action--status { background: #fff3e0; color: #e65100; }
+
+    .log-item__user {
+      font-size: var(--font-size-sm);
+      color: var(--color-text-primary);
+      font-weight: 500;
+    }
+
+    .log-item__target {
+      font-size: var(--font-size-sm);
+      color: var(--color-text-secondary);
+    }
+
+    .log-item__detail {
+      font-size: var(--font-size-sm);
+      color: var(--color-text-secondary);
+      line-height: 1.6;
+      margin-bottom: 8px;
+      padding: 8px 12px;
+      background: var(--color-bg-page);
+      border-radius: var(--radius-sm);
+      border-left: 3px solid var(--color-border);
+    }
+
+    .log-item__detail--create { border-left-color: #4caf50; }
+    .log-item__detail--update { border-left-color: #2196f3; }
+    .log-item__detail--delete { border-left-color: #f44336; }
+    .log-item__detail--status { border-left-color: #ff9800; }
+
+    .log-item__meta {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      font-size: 12px;
+      color: var(--color-text-tertiary);
+    }
+
+    .log-item__meta-item {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .log-item__id {
+      font-family: monospace;
+      background: var(--color-bg-page);
+      padding: 1px 6px;
+      border-radius: 4px;
+      font-size: 11px;
+    }
+
+    /* 空状态 */
+    .log-empty {
+      text-align: center;
+      padding: 60px 20px;
+      color: var(--color-text-secondary);
+    }
+
+    .log-empty__icon {
+      font-size: 48px;
+      margin-bottom: 16px;
+      opacity: 0.5;
+    }
+
+    .log-empty__text {
+      font-size: var(--font-size-md);
+    }
+
+    /* 分页区 */
+    .log-pagination {
+      padding: 16px 20px;
+      border-top: 1px solid var(--color-border-light);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    /* 响应式 */
+    @media (max-width: 768px) {
+      .log-stats {
+        grid-template-columns: repeat(2, 1fr);
+      }
+
+      .log-toolbar {
+        flex-direction: column;
+        align-items: flex-start;
+      }
+
+      .log-item {
+        flex-direction: column;
+        gap: 8px;
+      }
+
+      .log-item__timeline {
+        flex-direction: row;
+        padding-top: 0;
+      }
+
+      .log-item__line {
+        width: auto;
+        height: 2px;
+        min-height: auto;
+        flex: 1;
+        margin-top: 0;
+      }
+    }
   </style>
 </head>
 <body class="logs-page">
@@ -29,46 +352,71 @@
     <div class="admin-main">
       <header class="admin-header" id="admin-header"></header>
       <main class="admin-content">
-        <!-- 工具栏：操作类型筛选 -->
-        <div class="admin-toolbar">
-          <div class="admin-toolbar__left">
-            <select class="filter-select" id="filter-action">
-              <option value="">全部操作</option>
-              <option value="article_create">创建文章</option>
-              <option value="article_update">更新文章</option>
-              <option value="article_delete">删除文章</option>
-              <option value="article_status_change">文章状态变更</option>
-              <option value="comment_status_change">评论审核</option>
-              <option value="comment_delete">删除评论</option>
-              <option value="media_delete">删除媒体</option>
-              <option value="user_delete">删除用户</option>
-            </select>
+
+        <!-- 统计卡片 -->
+        <div class="log-stats">
+          <div class="log-stat-card">
+            <div class="log-stat-icon log-stat-icon--total">📋</div>
+            <div class="log-stat-info">
+              <div class="log-stat-label">总日志数</div>
+              <div class="log-stat-value" id="stat-total">-</div>
+            </div>
+          </div>
+          <div class="log-stat-card">
+            <div class="log-stat-icon log-stat-icon--today">📅</div>
+            <div class="log-stat-info">
+              <div class="log-stat-label">今日操作</div>
+              <div class="log-stat-value" id="stat-today">-</div>
+            </div>
+          </div>
+          <div class="log-stat-card">
+            <div class="log-stat-icon log-stat-icon--user">👤</div>
+            <div class="log-stat-info">
+              <div class="log-stat-label">活跃用户</div>
+              <div class="log-stat-value" id="stat-users">-</div>
+            </div>
+          </div>
+          <div class="log-stat-card">
+            <div class="log-stat-icon log-stat-icon--system">⚙️</div>
+            <div class="log-stat-info">
+              <div class="log-stat-label">系统操作</div>
+              <div class="log-stat-value" id="stat-system">-</div>
+            </div>
           </div>
         </div>
 
-        <!-- 日志数据表格 -->
-        <div class="data-table-wrapper">
-          <table class="data-table">
-            <thead>
-              <tr>
-                <th>ID</th>
-                <th>操作类型</th>
-                <th>操作人</th>
-                <th>目标类型</th>
-                <th>目标ID</th>
-                <th>详情</th>
-                <th>操作时间</th>
-              </tr>
-            </thead>
-            <tbody id="logs-tbody">
-              <tr><td colspan="7" style="text-align:center;padding:40px;">加载中...</td></tr>
-            </tbody>
-          </table>
-          <div class="table-pagination">
-            <span class="table-pagination__info" id="pagination-info"></span>
+        <!-- 筛选工具栏 -->
+        <div class="log-toolbar">
+          <span class="log-toolbar__label">筛选：</span>
+          <div class="log-filter-chips" id="filter-chips">
+            <span class="log-chip active" data-action="">全部</span>
+            <span class="log-chip" data-action="article_create">📝 创建文章</span>
+            <span class="log-chip" data-action="article_update">✏️ 更新文章</span>
+            <span class="log-chip" data-action="article_delete">🗑️ 删除文章</span>
+            <span class="log-chip" data-action="config_update">⚙️ 更新设置</span>
+            <span class="log-chip" data-action="comment_status_change">💬 评论审核</span>
+            <span class="log-chip" data-action="media_delete">🖼️ 删除媒体</span>
+          </div>
+        </div>
+
+        <!-- 日志时间线 -->
+        <div class="log-timeline">
+          <div class="log-timeline-header">
+            <span class="log-timeline-title">操作记录</span>
+            <span class="log-timeline-count" id="timeline-count">共 0 条</span>
+          </div>
+          <div class="log-list" id="log-list">
+            <div class="log-empty">
+              <div class="log-empty__icon">📋</div>
+              <div class="log-empty__text">加载中...</div>
+            </div>
+          </div>
+          <div class="log-pagination">
+            <span class="log-timeline-count" id="pagination-info"></span>
             <div id="pagination"></div>
           </div>
         </div>
+
       </main>
     </div>
   </div>
