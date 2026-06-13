@@ -82,8 +82,21 @@
       '<div class="turnstile-error">' +
         '<span class="turnstile-error__icon">⚠️</span>' +
         '<span class="turnstile-error__text">' + message + '</span>' +
-        '<button class="turnstile-retry" onclick="location.reload()">点击重试</button>' +
+        '<button class="turnstile-retry" id="turnstile-retry-btn">重新验证</button>' +
       '</div>';
+
+    // 绑定重试按钮 - 只重新加载 Turnstile，不刷新页面
+    document.getElementById('turnstile-retry-btn').onclick = function() {
+      container._turnstileInit = false;
+      // 移除旧的 cf-turnstile div
+      var oldWidget = container.querySelector('.cf-turnstile');
+      if (oldWidget) oldWidget.remove();
+      // 移除 Turnstile 创建的 iframe
+      var iframes = container.querySelectorAll('iframe');
+      iframes.forEach(function(f) { f.remove(); });
+      // 重新初始化
+      initTurnstile();
+    };
   }
 
   async function handleLogin() {
