@@ -39,65 +39,41 @@
       /^10\.\d+\.\d+\.\d+$/.test(hostname) ||
       /^172\.(1[6-9]|2\d|3[01])\.\d+\.\d+$/.test(hostname);
 
-    // 显示加载中提示
-    container.innerHTML = '<div class="turnstile-loading">⏳ 人机验证加载中...</div>';
+    // 使用隐式渲染：Turnstile 会自动查找 cf-turnstile class 的元素
+    // 设置回调函数
+    window.turnstileCallback = function(token) {
+      window._turnstileToken = token;
+    };
 
-    var rendered = false;
+    window.turnstileErrorCallback = function() {
+      showTurnstileError(container, '人机验证加载失败');
+    };
 
-    function renderWidget() {
-      if (rendered) return; // 防止重复渲染
-      rendered = true;
+    window.turnstileExpiredCallback = function() {
+      window._turnstileToken = null;
+      Toast.warning('验证已过期，请重新验证');
+    };
 
+    // 等待 Turnstile 脚本加载完成
+    function waitForTurnstile() {
       if (window.turnstile) {
-        try {
-          container.innerHTML = '';
-          turnstile.render(container, {
-            sitekey: CONFIG.TURNSTILE_SITE_KEY,
-            callback: function(token) {
-              window._turnstileToken = token;
-              container.classList.add('turnstile-success');
-              container.classList.remove('turnstile-error');
-            },
-            'error-callback': function() {
-              showTurnstileError(container, '人机验证加载失败');
-            },
-            'expired-callback': function() {
-              window._turnstileToken = null;
-              Toast.warning('验证已过期，请重新验证');
-              resetTurnstile();
-            }
-          });
-        } catch (e) {
-          console.warn('Turnstile加载失败:', e);
-          if (isLocal) {
-            container.style.display = 'none';
-          } else {
-            showTurnstileError(container, '人机验证加载失败');
+        // Turnstile 已加载，它会自动渲染 cf-turnstile 元素
+        // 检查是否已经有 token（隐式渲染完成）
+        setTimeout(function() {
+          var response = container.querySelector('[name="cf-turnstile-response"]');
+          if (response && response.value) {
+            window._turnstileToken = response.value;
           }
-        }
+        }, 2000);
       } else if (isLocal) {
         container.style.display = 'none';
       } else {
-        showTurnstileError(container, '人机验证脚本加载超时');
+        // 继续等待
+        setTimeout(waitForTurnstile, 200);
       }
     }
 
-    // 等待 Turnstile 脚本加载完成
-    if (window.turnstile) {
-      renderWidget();
-    } else {
-      var timer = setInterval(function() {
-        if (window.turnstile) {
-          clearInterval(timer);
-          renderWidget();
-        }
-      }, 200);
-      // 10秒后停止等待
-      setTimeout(function() {
-        clearInterval(timer);
-        if (!rendered) renderWidget();
-      }, 10000);
-    }
+    waitForTurnstile();
   }
 
   // 显示 Turnstile 错误和重试按钮
