@@ -24,13 +24,24 @@
     };
   }
 
+  // Turnstile 回调函数（必须是全局函数，供 HTML data-callback 调用）
+  window.turnstileCallback = function(token) {
+    window._turnstileToken = token;
+  };
+
+  window.turnstileErrorCallback = function() {
+    var container = document.getElementById('turnstile-container');
+    if (container) showTurnstileError(container, '人机验证加载失败');
+  };
+
+  window.turnstileExpiredCallback = function() {
+    window._turnstileToken = null;
+    Toast.warning('验证已过期，请重新验证');
+  };
+
   function initTurnstile() {
     var container = document.getElementById('turnstile-container');
     if (!container) return;
-
-    // 防止重复初始化
-    if (container._turnstileInit) return;
-    container._turnstileInit = true;
 
     // 检测是否为本地开发环境
     var hostname = window.location.hostname;
@@ -39,41 +50,10 @@
       /^10\.\d+\.\d+\.\d+$/.test(hostname) ||
       /^172\.(1[6-9]|2\d|3[01])\.\d+\.\d+$/.test(hostname);
 
-    // 使用隐式渲染：Turnstile 会自动查找 cf-turnstile class 的元素
-    // 设置回调函数
-    window.turnstileCallback = function(token) {
-      window._turnstileToken = token;
-    };
-
-    window.turnstileErrorCallback = function() {
-      showTurnstileError(container, '人机验证加载失败');
-    };
-
-    window.turnstileExpiredCallback = function() {
-      window._turnstileToken = null;
-      Toast.warning('验证已过期，请重新验证');
-    };
-
-    // 等待 Turnstile 脚本加载完成
-    function waitForTurnstile() {
-      if (window.turnstile) {
-        // Turnstile 已加载，它会自动渲染 cf-turnstile 元素
-        // 检查是否已经有 token（隐式渲染完成）
-        setTimeout(function() {
-          var response = container.querySelector('[name="cf-turnstile-response"]');
-          if (response && response.value) {
-            window._turnstileToken = response.value;
-          }
-        }, 2000);
-      } else if (isLocal) {
-        container.style.display = 'none';
-      } else {
-        // 继续等待
-        setTimeout(waitForTurnstile, 200);
-      }
+    if (isLocal) {
+      container.style.display = 'none';
     }
-
-    waitForTurnstile();
+    // Turnstile 脚本会自动渲染 cf-turnstile 元素，不需要手动初始化
   }
 
   // 显示 Turnstile 错误和重试按钮
