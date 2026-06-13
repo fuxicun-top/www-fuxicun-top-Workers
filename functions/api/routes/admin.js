@@ -654,15 +654,34 @@ async function updateConfig(request, env, user) {
   ];
 
   const data = await request.json();
+
+  // 查询当前配置值，用于对比变化
+  const currentConfig = {};
+  try {
+    const rows = await dbQuery(env.FUXICUN_DB, "SELECT key, value FROM site_config");
+    if (rows.results) {
+      rows.results.forEach(row => { currentConfig[row.key] = row.value; });
+    }
+  } catch (e) { /* 忽略查询失败 */ }
+
   const changedKeys = [];
+  const changedDetails = [];
 
   for (const [key, value] of Object.entries(data)) {
     if (!ALLOWED_CONFIG_KEYS.includes(key)) continue;
-    changedKeys.push(key);
+    const strValue = String(value).substring(0, 10000);
+
+    // 对比新旧值，只记录真正变化的
+    const oldValue = currentConfig[key] || '';
+    if (oldValue !== strValue) {
+      changedKeys.push(key);
+      changedDetails.push({ key, old: oldValue, new: strValue });
+    }
+
     await dbRun(
       env.FUXICUN_DB,
       "INSERT INTO site_config (key, value, updated_at) VALUES (?, ?, datetime('now')) ON CONFLICT(key) DO UPDATE SET value = excluded.value, updated_at = excluded.updated_at",
-      [key, String(value).substring(0, 10000)]
+      [key, strValue]
     );
   }
 
@@ -679,7 +698,7 @@ async function updateConfig(request, env, user) {
     await clearAllCommentPolicyCache(env);
   }
 
-  // 记录详细日志：列出修改了哪些配置项
+  // 记录详细日志：列出实际修改的配置项及变化
   const KEY_NAMES = {
     'site_name': '网站名称', 'site_description': '网站描述', 'site_keywords': '关键词',
     'contact_email': '联系邮箱', 'contact_phone': '联系电话', 'contact_address': '联系地址',
@@ -691,9 +710,25 @@ async function updateConfig(request, env, user) {
     'comment_policy': '评论策略', 'comment_review': '评论审核', 'like_policy': '点赞策略', 'sensitive_words': '敏感词',
     'cache_enabled': '缓存开关'
   };
-  const changedNames = changedKeys.map(k => KEY_NAMES[k] || k);
-  const logDetail = '修改配置：' + changedNames.join('、');
-  await writeAuditLog(env, user.id, 'config_update', 'config', null, logDetail);
+
+  if (changedDetails.length === 0) {
+    await writeAuditLog(env, user.id, 'config_update', 'config', null, '保存设置（无变更）');
+  } else {
+    // 截断过长的值用于显示
+    function truncate(str, max) {
+      if (!str) return '(空)';
+      return str.length > max ? str.substring(0, max) + '...' : str;
+    }
+
+    const logLines = changedDetails.map(d => {
+      const name = KEY_NAMES[d.key] || d.key;
+      const oldVal = truncate(d.old, 30);
+      const newVal = truncate(d.new, 30);
+      return name + '：' + oldVal + ' → ' + newVal;
+    });
+    const logDetail = '修改了 ' + changedDetails.length + ' 项配置：\n' + logLines.join('\n');
+    await writeAuditLog(env, user.id, 'config_update', 'config', null, logDetail);
+  }
 
   return successResponse(null, '设置保存成功');
 }
