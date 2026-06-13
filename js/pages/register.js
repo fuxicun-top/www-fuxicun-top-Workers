@@ -24,6 +24,10 @@
     var container = document.getElementById('turnstile-container');
     if (!container) return;
 
+    // 防止重复初始化
+    if (container._turnstileInit) return;
+    container._turnstileInit = true;
+
     // 检测是否为本地开发环境
     var hostname = window.location.hostname;
     var isLocal = hostname === 'localhost' || hostname === '127.0.0.1' ||
@@ -34,10 +38,15 @@
     // 显示加载中提示
     container.innerHTML = '<div class="turnstile-loading">⏳ 人机验证加载中...</div>';
 
+    var rendered = false;
+
     function renderWidget() {
+      if (rendered) return; // 防止重复渲染
+      rendered = true;
+
       if (window.turnstile) {
         try {
-          container.innerHTML = ''; // 清空加载提示
+          container.innerHTML = '';
           turnstile.render(container, {
             sitekey: CONFIG.TURNSTILE_SITE_KEY,
             callback: function(token) {
@@ -82,9 +91,7 @@
       // 10秒后停止等待
       setTimeout(function() {
         clearInterval(timer);
-        if (!window.turnstile) {
-          renderWidget(); // 会显示超时错误
-        }
+        if (!rendered) renderWidget();
       }, 10000);
     }
   }
@@ -177,7 +184,8 @@
         turnstile.reset();
         container.classList.remove('turnstile-success', 'turnstile-error');
       } catch (e) {
-        // 重置失败，重新渲染
+        // 重置失败，清除标记后重新初始化
+        container._turnstileInit = false;
         initTurnstile();
       }
     }
